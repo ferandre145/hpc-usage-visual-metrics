@@ -12,16 +12,11 @@ import numpy as np
 import re
 
 '''
-Author: Fernando Andrade
-Date: Aug/09/2022
-Collaborator/s:
 Description: Read in hpc usage data from excel file and provide a visualization.
     The goal is to help visualize HPC allocated core hours vs actual core hours used.
     There is an additional metric for core hours used in just testing.
 
 '''
-
-# TODO discuss non-numerical icons in the core hour columns
 
 comArgs = argparse.ArgumentParser(
     prog="usageVisual", description="Visualize hpc usage data.")
@@ -38,7 +33,7 @@ timePeriodCol = 'Time period'
 # graph settings
 barWidth = 0.3
 barPadding = 3
-xFontSize = 10
+xFontSize = 12
 yFontSize = 16
 xAxisFont = 20
 yAxisFont = 20
@@ -61,45 +56,45 @@ def readData(filepath):
 def sanitize(df):
     '''
         Remove rows that dont include hpc resource usage, using the HPC account column as the
-        filter for now
+        filter
 
         Parameters:
         df (object): pandas dataframe with the HPC usage data
+
+        return:
+        dataframe with extra rows dropped
     '''
     print('Cleaning up data...')
-    print(df[hpcAccCol])
 
     # cut off rows that aren't for hpc usage (comments, empty lines, etc)
     try:
         removeIndex = df[hpcAccCol].tolist().index('N/A')
-        print(
-            f"First instance of N/A in HPC account column: {removeIndex}")
-        print('Dropping invalid rows and showing result...')
+        # print(
+        #     f"First instance of N/A in HPC account column: {removeIndex}")
+        # print('Dropping invalid rows and showing result...')
         df = df.drop(df.index[removeIndex:])
     except:
         print('No empty HPC account values found, continuing to show result...')
 
-    print(df)
-
-    # clean up non numerical icons
-    for hours in df[allocCoreHrCol].tolist():
-        print(hours)
-    print(df[allocCoreHrCol])
-
-    print(df)
-    print(df.columns.get_loc(usedCoreHrCol))
     return df
 
 
 def getColVals(df, colName):
     '''
+        Return values of a specifiied column from the dataframe.
+        Also further clean up of values if necessary
 
+        Parameters:
+        df (object): dataframe of the hpc usage data
+        colName (str): name of the column to get values from
+
+        return: 
+            list of values in the column
     '''
     colValues = []
     for value in df[colName].tolist():
         if(colName != timePeriodCol and colName != hpcAccCol):
-            print(f'removing non numericals from {value}')
-            print(value)
+            # print(f'removing non numericals from {value}')
             if value != '' and value != 'N/A':
                 colValues.append(int(re.sub('[^0-9]', '', str(value))))
             else:
@@ -110,16 +105,19 @@ def getColVals(df, colName):
             else:
                 colValues.append(value)
 
-    print(df[usedCoreHrCol], '\n')
     return colValues
 
 
 def plotData(dataDict):
     '''
+        Description: Gather data from given dictionary and plot graph
 
+        Parameters: 
+        dataDict (object): Python dictionary containing the time periods, 
+        hpc systems/accounts, allocated hours, used hours, and testing hours.
+        keys are the same names as the excel columns
     '''
     print('plotting data...')
-    print(dataDict)
 
     xlabels = (dataDict[timePeriodCol][i] + " " + dataDict[hpcAccCol][i]
                for i in range(len(dataDict[allocCoreHrCol])))
@@ -151,7 +149,6 @@ def plotData(dataDict):
 
 def main():
     df = readData(args.filepath)
-    print(df)
     df = sanitize(df)
 
     timePeriods = getColVals(df, timePeriodCol)
@@ -160,14 +157,9 @@ def main():
     usedHrs = getColVals(df, usedCoreHrCol)
     testHrs = getColVals(df, testCoreHrCol)
 
-    print(f'Here are the time periods:\n{timePeriods}\n')
-    print(f'Here are the HPCs and Accounts:\n{hpcAcc}\n')
-    print(f'Here are the allocated hours:\n{allocHrs}\n')
-    print(f'Here are the used hours:\n{usedHrs}\n')
-    print(f'Here are the used hours for testing:\n{testHrs}\n')
-
     plotData({timePeriodCol: timePeriods, hpcAccCol: hpcAcc,
               allocCoreHrCol: allocHrs, usedCoreHrCol: usedHrs, testCoreHrCol: testHrs})
+    print('closing...')
 
     return
 
