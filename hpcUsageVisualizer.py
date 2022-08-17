@@ -1,10 +1,11 @@
 import sys
 import argparse
-from turtle import color
+from turtle import color, forward
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import re
+from datetime import datetime
 
 '''
 Description: Read in hpc usage data from excel file and provide a visualization.
@@ -16,6 +17,8 @@ Description: Read in hpc usage data from excel file and provide a visualization.
 comArgs = argparse.ArgumentParser(
     prog="usageVisual", description="Visualize hpc usage data.")
 comArgs.add_argument('-f', '--filepath', type=str)
+comArgs.add_argument('-o', '--output', type=str)
+
 args = comArgs.parse_args()
 
 # excel columns
@@ -34,6 +37,12 @@ xAxisFont = 20
 yAxisFont = 20
 titleFontSize = 24
 legendFontSize = 14
+plotXSize = 25
+plotYSize = 13
+plotDPI = 500
+
+filepath = args.filepath
+outputFile = args.output
 
 
 def readData(filepath):
@@ -139,11 +148,28 @@ def plotData(dataDict):
     plt.yticks(fontsize=yFontSize)
     plt.legend(fontsize=legendFontSize)
     plt.title('HPC Core Hour Usage', fontsize=titleFontSize)
-    plt.show()
+
+    # if output location not provided, let user decide in the graph popup
+    if not args.output:
+        figManager = plt.get_current_fig_manager()
+        figManager.window.showMaximized()
+        plt.show()
+    else:
+        fig = plt.gcf()
+        fig.set_size_inches((plotXSize, plotYSize), forward=False)
+        time = getCurrentTime()
+        plt.savefig((outputFile+f' - {time}'), dpi=plotDPI)
+        print(f'Plot figure saved to ${outputFile}')
+
+
+def getCurrentTime():
+    '''Return current time as a string'''
+    currentTime = datetime.now()
+    return currentTime.strftime('%b-%d-%Y (%I-%M-%Ss %p)')
 
 
 def main():
-    df = readData(args.filepath)
+    df = readData(filepath)
     df = sanitize(df)
 
     timePeriods = getColVals(df, timePeriodCol)
