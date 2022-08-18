@@ -192,11 +192,11 @@ def readLogData(filepath):
                 if acc in line:
                     tmpDct['acc'] = line[line.find(acc)+len(acc):].strip()
                 elif reportTime in line:
-                    tmpDct['startTime'] = line[line.find(
-                        reportTime)+len(reportTime):].strip()
+                    tmpDct['endTime'] = reformatTime(line[line.find(
+                        reportTime)+len(reportTime):].strip())
                 elif reportBeginning in line:
-                    tmpDct['endTime'] = line[line.find(
-                        reportBeginning)+len(reportBeginning):].strip()
+                    tmpDct['startTime'] = reformatTime(line[line.find(
+                        reportBeginning)+len(reportBeginning):].strip())
                 elif machine in line:
                     tmpDct['machineID'] = line[line.find(
                         machine)+len(machine):].strip()
@@ -212,27 +212,48 @@ def readLogData(filepath):
                 elif fairShare in line:
                     tmpDct['fairShare'] = line[line.find(
                         fairShare)+len(fairShare):].strip()
-            print(tmpDct)
             data.append(tmpDct)
-    print(f'This is the data from the logs:\n{data}')
     return data
+
+
+def plotLogData(data):
+    xlabels = []
+    for i in range(len(data)):
+        label = data[i]['startTime']+'-'+data[i]['endTime'] + \
+            " "+data[i]['machineID']+'/'+data[i]['acc']
+        print(label)
+        xlabels.append(label)
+    return
+
+
+def reformatTime(time):
+    '''Take time from logs and return a format for plot labels'''
+    newTime = time.split()
+    return datetime.strptime(
+        f'{newTime[1]} {newTime[2]} {newTime[3]}', '%d %b %Y').strftime('%m/%d/%Y')
 
 
 def main():
 
-    # df = readData(filepath)
-    # df = sanitize(df)
+    # pass in excel file otherwise assume log file directory
+    if(filepath.endswith('.xlsx')):
 
-    # timePeriods = getColVals(df, timePeriodCol)
-    # hpcAcc = getColVals(df, hpcAccCol)
-    # allocHrs = getColVals(df, allocCoreHrCol)
-    # usedHrs = getColVals(df, usedCoreHrCol)
-    # testHrs = getColVals(df, testCoreHrCol)
+        df = readData(filepath)
+        df = sanitize(df)
 
-    # plotData({timePeriodCol: timePeriods, hpcAccCol: hpcAcc,
-    #           allocCoreHrCol: allocHrs, usedCoreHrCol: usedHrs, testCoreHrCol: testHrs})
+        timePeriods = getColVals(df, timePeriodCol)
+        hpcAcc = getColVals(df, hpcAccCol)
+        allocHrs = getColVals(df, allocCoreHrCol)
+        usedHrs = getColVals(df, usedCoreHrCol)
+        testHrs = getColVals(df, testCoreHrCol)
 
-    logdata = readLogData(filepath)
+        plotData({timePeriodCol: timePeriods, hpcAccCol: hpcAcc,
+                  allocCoreHrCol: allocHrs, usedCoreHrCol: usedHrs, testCoreHrCol: testHrs})
+    else:
+        logData = readLogData(filepath)
+        print(logData)
+        plotLogData(logData)
+
     print('closing...')
 
     return
