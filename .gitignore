@@ -131,3 +131,7 @@ dmypy.json
 # vscode folder
 ./.vscode/
 .vscode/
+
+#logs for testing input data
+/sampleData
+

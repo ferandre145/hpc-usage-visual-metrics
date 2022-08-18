@@ -1,4 +1,5 @@
 import sys
+import os
 import argparse
 from turtle import color, forward
 import pandas as pd
@@ -168,18 +169,70 @@ def getCurrentTime():
     return currentTime.strftime('%b-%d-%Y (%I-%M-%Ss %p)')
 
 
+def readLogData(filepath):
+    '''Read in given excel file and return dataframe'''
+
+    acc = 'Project Report for:'
+    reportTime = 'Report Run:'
+    reportBeginning = 'Report Period Beginning:'
+    machine = 'Machines:'
+    initAlloc = 'Initial Allocation in Hours:'
+    adjustAlloc = 'Adjusted Allocation:'
+    usedCoreHrs = 'Total Core Hours Used:'
+    fairShare = 'Project Fair Share:'
+
+    data = []
+    # go through each log and retrieve data
+    for file in os.listdir(filepath):
+        tmpDct = {}
+        if file.endswith('.txt') or file.endswith('.log'):
+            print(f'{file} ends with .txt or .log')
+            f = open(filepath+file)
+            for line in f:
+                if acc in line:
+                    tmpDct['acc'] = line[line.find(acc)+len(acc):].strip()
+                elif reportTime in line:
+                    tmpDct['startTime'] = line[line.find(
+                        reportTime)+len(reportTime):].strip()
+                elif reportBeginning in line:
+                    tmpDct['endTime'] = line[line.find(
+                        reportBeginning)+len(reportBeginning):].strip()
+                elif machine in line:
+                    tmpDct['machineID'] = line[line.find(
+                        machine)+len(machine):].strip()
+                elif initAlloc in line:
+                    tmpDct['initialAlloc'] = line[line.find(
+                        initAlloc)+len(initAlloc):].strip().replace(',', '')
+                elif adjustAlloc in line:
+                    tmpDct['adjustedAlloc'] = line[line.find(
+                        adjustAlloc)+len(adjustAlloc):].strip().replace(',', '')
+                elif usedCoreHrs in line:
+                    tmpDct['usedHrs'] = line[line.find(
+                        usedCoreHrs)+len(usedCoreHrs):].strip().replace(',', '')
+                elif fairShare in line:
+                    tmpDct['fairShare'] = line[line.find(
+                        fairShare)+len(fairShare):].strip()
+            print(tmpDct)
+            data.append(tmpDct)
+    print(f'This is the data from the logs:\n{data}')
+    return data
+
+
 def main():
-    df = readData(filepath)
-    df = sanitize(df)
 
-    timePeriods = getColVals(df, timePeriodCol)
-    hpcAcc = getColVals(df, hpcAccCol)
-    allocHrs = getColVals(df, allocCoreHrCol)
-    usedHrs = getColVals(df, usedCoreHrCol)
-    testHrs = getColVals(df, testCoreHrCol)
+    # df = readData(filepath)
+    # df = sanitize(df)
 
-    plotData({timePeriodCol: timePeriods, hpcAccCol: hpcAcc,
-              allocCoreHrCol: allocHrs, usedCoreHrCol: usedHrs, testCoreHrCol: testHrs})
+    # timePeriods = getColVals(df, timePeriodCol)
+    # hpcAcc = getColVals(df, hpcAccCol)
+    # allocHrs = getColVals(df, allocCoreHrCol)
+    # usedHrs = getColVals(df, usedCoreHrCol)
+    # testHrs = getColVals(df, testCoreHrCol)
+
+    # plotData({timePeriodCol: timePeriods, hpcAccCol: hpcAcc,
+    #           allocCoreHrCol: allocHrs, usedCoreHrCol: usedHrs, testCoreHrCol: testHrs})
+
+    logdata = readLogData(filepath)
     print('closing...')
 
     return
