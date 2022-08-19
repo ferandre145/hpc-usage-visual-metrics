@@ -1,7 +1,8 @@
 # hpc-usage-visual-metrics
 ### Python script for visualizing HPC resources
-- Example of running and passing in sample data:
+- Example of running, passing in sample log data, and exporting graphs to data directory:
 ```
-python .\usageVisual.py -f .\data\RDHPCS_UFS-WM.Core.hours.use.xlsx -o .\data\hpcUsageOutput
+python ./hpcUsageVisualizer.py -f ./sampleData/ -o ./data/
 ```
-- Providing an output location will skip the graph popup.
+- Providing an output location argument will skip the graph popups.
+- Figures for core hour allocation, usage, and fair share will be saved.
