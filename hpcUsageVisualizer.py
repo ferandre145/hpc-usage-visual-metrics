@@ -186,7 +186,6 @@ def readLogData(filepath):
     for file in os.listdir(filepath):
         tmpDct = {}
         if file.endswith('.txt') or file.endswith('.log'):
-            print(f'{file} ends with .txt or .log')
             f = open(filepath+file)
             for line in f:
                 if acc in line:
@@ -212,7 +211,12 @@ def readLogData(filepath):
                 elif fairShare in line:
                     tmpDct['fairShare'] = line[line.find(
                         fairShare)+len(fairShare):].strip()
-            data.append(tmpDct)
+            if(len(tmpDct) == 0):
+                print('Empty/invalid log file, skipping...')
+            else:
+                data.append(tmpDct)
+    if(len(data) == 0):
+        sys.exit('No data retrieved from log directory. Exiting...')
     return data
 
 
@@ -221,9 +225,88 @@ def plotLogData(data):
     for i in range(len(data)):
         label = data[i]['startTime']+'-'+data[i]['endTime'] + \
             " "+data[i]['machineID']+'/'+data[i]['acc']
-        print(label)
         xlabels.append(label)
+
+    barsAlloc = getPlotColVals('adjustedAlloc', data)
+    barsUsed = getPlotColVals('usedHrs', data)
+
+    allocSpacing = np.arange(len(barsAlloc))
+    usedSpacing = [val + barWidth for val in allocSpacing]
+
+    plt.bar(allocSpacing, barsAlloc, color='green',
+            width=barWidth, label='Allocated Hours')
+    plt.bar(usedSpacing, barsUsed, color='red',
+            width=barWidth, label='Used Hours')
+
+    plt.xlabel('Timeframe & HPC / Account', fontsize=xAxisFont)
+    plt.ylabel('Core Hours', fontsize=yAxisFont)
+    plt.xticks(
+        [r + barWidth for r in range(len(barsAlloc))],  xlabels,  fontsize=xFontSize)
+    plt.yticks(fontsize=yFontSize)
+    plt.legend(fontsize=legendFontSize)
+    plt.title('HPC Core Hour Usage', fontsize=titleFontSize)
+
+    # if output location not provided, let user decide in the graph popup
+    if not args.output:
+        figManager = plt.get_current_fig_manager()
+        figManager.window.showMaximized()
+        plt.show()
+    else:
+        fig = plt.gcf()
+        fig.set_size_inches((plotXSize, plotYSize), forward=False)
+        time = getCurrentTime()
+        plt.savefig((outputFile+f' - {time}'), dpi=plotDPI)
+        print(f'Plot figure saved to ${outputFile}')
+
     return
+
+
+def plotShareData(data):
+    '''Plot out fair share values from provided log data'''
+    xlabels = []
+    for i in range(len(data)):
+        label = data[i]['startTime']+'-'+data[i]['endTime'] + \
+            " "+data[i]['machineID']+'/'+data[i]['acc']
+        xlabels.append(label)
+
+    plt.figure(1)
+
+    fairShareVals = getPlotColVals('fairShare', data, toFloat=True)
+    spacing = np.arange(len(fairShareVals))
+
+    plt.bar(spacing, fairShareVals, color='green',
+            width=barWidth, label='Fair Share')
+
+    plt.xlabel('Timeframe & HPC / Account', fontsize=xAxisFont)
+    plt.ylabel('Fair Share', fontsize=yAxisFont)
+    plt.xticks([r+barWidth for r in range(len(fairShareVals))],
+               xlabels, fontsize=xFontSize)
+    plt.yticks(yFontSize)
+    plt.title('HPC Fair Share', fontsize=titleFontSize)
+
+    if not args.output:
+        figManager = plt.get_current_fig_manager()
+        figManager.window.showMaximized()
+        plt.show()
+    else:
+        fig = plt.gcf()
+        fig.set_size_inches((plotXSize, plotYSize), forward=False)
+        time = getCurrentTime()
+        plt.savefig((outputFile+' Fair Share '+f' - {time}'), dpi=plotDPI)
+        print(f'Plot figure saved to ${outputFile}')
+    return
+
+
+def getPlotColVals(col, data, toFloat=False):
+    '''return a list of the specified column values in the given data'''
+    vals = []
+    for row in data:
+        if toFloat:
+            vals.append(float(row[col]))
+        else:
+            vals.append(int(row[col]))
+
+    return vals
 
 
 def reformatTime(time):
@@ -253,6 +336,7 @@ def main():
         logData = readLogData(filepath)
         print(logData)
         plotLogData(logData)
+        # plotShareData(logData)
 
     print('closing...')
 
