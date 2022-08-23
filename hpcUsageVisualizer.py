@@ -17,9 +17,11 @@ Description: Read in hpc usage data from given log file directory and provide a 
 '''
 
 comArgs = argparse.ArgumentParser(
-    prog="usageVisual", description="Visualize hpc usage data.")
-comArgs.add_argument('-f', '--filepath', type=str)
-comArgs.add_argument('-o', '--output', type=str)
+    prog="HPC Usage Visualizer", description="Visualize hpc usage data.", formatter_class=argparse.MetavarTypeHelpFormatter)
+comArgs.add_argument('-f', '--filepath', type=str,
+                     help='Path to log directory')
+comArgs.add_argument(
+    '-o', '--output', type=str, help="Path to output directory")
 
 args = comArgs.parse_args()
 
